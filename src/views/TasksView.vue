@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { onActivated } from 'vue'
+import { onActivated, computed } from 'vue'
 import { useTaskStore } from '@/stores/tasks'
 import { Icon } from '@iconify/vue'
 
 const taskStore = useTaskStore()
 
+const sortedTasks = computed(() => {
+  return [...taskStore.tasks].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+})
+
 onActivated(() => {
   taskStore.refreshTasks()
 })
+
 
 const statusLabels: Record<string, string> = {
   pending: '等待中',
@@ -95,7 +102,7 @@ function getProgressColor(task: any): string {
   <div class="tasks-view">
     <header class="page-header">
       <h2>下载任务</h2>
-      <span class="task-count">{{ taskStore.tasks.length }} 个任务</span>
+      <span class="task-count">{{ sortedTasks.length }} 个任务</span>
     </header>
 
     <div v-if="taskStore.tasks.length === 0" class="empty-state">
@@ -106,7 +113,7 @@ function getProgressColor(task: any): string {
 
     <div v-else class="task-list">
       <div
-        v-for="task in taskStore.tasks"
+        v-for="task in sortedTasks"
         :key="task.id"
         class="task-card"
       >

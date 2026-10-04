@@ -113,6 +113,16 @@ pub async fn start_download(
     task.download_subtitle = params.download_subtitle;
     task.download_cover = params.download_cover;
     task.audio_only = params.audio_only;
+
+    // 将清晰度信息添加到任务标题
+    if params.audio_only {
+        task.title = format!("仅音频 - {}", task.title);
+    } else if let Some(ref qn) = params.quality_name {
+        if !qn.is_empty() {
+            task.title = format!("{} - {}", qn, task.title);
+        }
+    }
+
     task.status = DownloadStatus::Downloading;
 
     // 读取设置中的 cookie、代理和下载目录
@@ -152,7 +162,7 @@ pub async fn start_download(
     task.output_path = output_dir.clone();
 
     // 文件名模板：验证是否为有效的 yt-dlp 模板（必须包含 %( 语法）
-    let filename_template = params
+    let mut filename_template = params
         .filename_template
         .filter(|t| !t.is_empty() && t.contains("%("))
         .or_else(|| {
@@ -163,6 +173,16 @@ pub async fn start_download(
             }
         })
         .unwrap_or_else(|| "[%(uploader)s] %(title)s.%(ext)s".to_string());
+
+    // 将清晰度添加到输出文件名
+    let quality_tag = if params.audio_only {
+        "仅音频".to_string()
+    } else {
+        params.quality_name.clone().unwrap_or_default()
+    };
+    if !quality_tag.is_empty() {
+        filename_template = filename_template.replace(".%(ext)s", &format!("[{}].%(ext)s", quality_tag));
+    }
 
     let handle = {
         let mut mgr = state.manager.lock().await;
