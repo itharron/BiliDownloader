@@ -112,6 +112,7 @@ pub async fn start_download(
     task.download_danmaku = params.download_danmaku;
     task.download_subtitle = params.download_subtitle;
     task.download_cover = params.download_cover;
+    task.audio_only = params.audio_only;
     task.status = DownloadStatus::Downloading;
 
     // 读取设置中的 cookie、代理和下载目录

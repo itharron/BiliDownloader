@@ -137,9 +137,13 @@ function getProgressColor(task: any): string {
               <Icon icon="mdi:clock-outline" :width="14" />
               {{ task.durationText }}
             </span>
-            <span v-if="task.qualityName" class="meta-quality">
+            <span v-if="task.qualityName && !task.audioOnly" class="meta-quality">
               <Icon icon="mdi:video-box" :width="14" />
               {{ task.qualityName }}
+            </span>
+            <span v-if="task.audioOnly" class="meta-audio-only">
+              <Icon icon="mdi:music-note" :width="14" />
+              仅音频
             </span>
           </div>
 
@@ -369,10 +373,15 @@ function getProgressColor(task: any): string {
 
 .meta-up,
 .meta-duration,
-.meta-quality {
+.meta-quality,
+.meta-audio-only {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+}
+
+.meta-audio-only {
+  color: var(--color-warning);
 }
 
 /* 进度条 */

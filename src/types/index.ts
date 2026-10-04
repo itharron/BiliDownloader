@@ -72,6 +72,7 @@ export interface DownloadTask {
   downloadDanmaku: boolean
   downloadSubtitle: boolean
   downloadCover: boolean
+  audioOnly: boolean
 }
 
 export type ThemeMode = 'auto' | 'light' | 'dark'

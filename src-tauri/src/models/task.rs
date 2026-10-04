@@ -52,6 +52,7 @@ pub struct DownloadTask {
     pub download_danmaku: bool,
     pub download_subtitle: bool,
     pub download_cover: bool,
+    pub audio_only: bool,
 }
 
 impl DownloadTask {
@@ -77,6 +78,7 @@ impl DownloadTask {
             download_danmaku: false,
             download_subtitle: false,
             download_cover: false,
+            audio_only: false,
         }
     }
 }
