@@ -105,7 +105,7 @@ function getProgressColor(task: any): string {
       <span class="task-count">{{ sortedTasks.length }} 个任务</span>
     </header>
 
-    <div v-if="taskStore.tasks.length === 0" class="empty-state">
+    <div v-if="sortedTasks.length === 0" class="empty-state">
       <Icon icon="mdi:download-off" :width="48" />
       <p>暂无下载任务</p>
       <p class="sub">前往首页解析视频并开始下载</p>
