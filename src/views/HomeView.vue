@@ -16,7 +16,6 @@ const showLoginTip = ref(false)
 const showLoginDialog = ref(false)
 const audioOnly = ref(false)
 
-
 const router = useRouter()
 const taskStore = useTaskStore()
 const videoStore = useVideoStore()
