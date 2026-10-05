@@ -111,8 +111,14 @@ function toggleTheme() {
 }
 
 .sidebar.collapsed {
-  width: 64px;
+  width: 68px;
   padding: var(--spacing-md) var(--spacing-sm);
+}
+
+.sidebar.collapsed .sidebar-footer {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .sidebar-header {
