@@ -108,6 +108,10 @@ pub struct DownloadArgs {
     pub cookies_bili_jct: Option<String>,
     pub cookies_dedeuserid: Option<String>,
     pub proxy: Option<String>,
+    pub download_description: bool,
+    pub download_danmaku: bool,
+    pub download_subtitle: bool,
+    pub download_cover: bool,
 }
 
 /// 自动检测 ffmpeg 路径
@@ -235,13 +239,13 @@ fn quality_to_ytdlp_format(quality_id: u32) -> &'static str {
     }
 }
 
-/// 生成 Netscape 格式的 cookie 文本
+/// 生成 Netscape 格式的 cookie 文本（仅登录态 cookie）
 fn build_cookie_netscape(sessdata: &str, bili_jct: &str, dedeuserid: &str) -> String {
     let domain = ".bilibili.com";
     let flag = "TRUE";
     let path = "/";
     let secure = "TRUE";
-    let expiration = (chrono::Utc::now() + chrono::Duration::days(30)).timestamp();
+    let expiration = (chrono::Utc::now() + chrono::Duration::days(365)).timestamp();
 
     format!(
         "# Netscape HTTP Cookie File\n\
@@ -281,23 +285,41 @@ where
 
     // 构建 yt-dlp 参数
     let mut cmd_args: Vec<String> = vec![
-        args.url.clone(),
-        "--newline".to_string(),
-        "--progress".to_string(),
-        "--no-colors".to_string(),
-        "--no-playlist".to_string(),
+        // 反爬与重试
+        "--extractor-retries".to_string(),
+        "5".to_string(),
+        "--retries".to_string(),
+        "5".to_string(),
+        "--sleep-requests".to_string(),
+        "0.5".to_string(),
+        "--sleep-interval".to_string(),
+        "2".to_string(),
+        "--max-sleep-interval".to_string(),
+        "5".to_string(),
+        // 网络兼容性
+        "--geo-bypass".to_string(),
+        "--no-check-formats".to_string(),
+        "--force-ipv4".to_string(),
+        // 请求头
         "--add-header".to_string(),
         "Referer:https://www.bilibili.com".to_string(),
         "--add-header".to_string(),
-        "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36".to_string(),
+        "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36".to_string(),
         "--add-header".to_string(),
         "Origin:https://www.bilibili.com".to_string(),
+        // 播放列表
+        "--no-playlist".to_string(),
+        // 输出格式
+        "--no-colors".to_string(),
+        "--newline".to_string(),
+        "--progress".to_string(),
         "--embed-metadata".to_string(),
         "--print".to_string(),
         "after_move:filepath".to_string(),
+        args.url.clone(),
         "-o".to_string(),
         format!(
-            "{}/{}",
+            "{}/%(title)s/{}",
             args.output_dir,
             args.filename_template
         ),
@@ -317,7 +339,26 @@ where
         cmd_args.push("mp4".to_string());
     }
 
-    // Cookie 文件：生成临时 Netscape 格式 cookie 文件
+    // 下载简介
+    if args.download_description {
+        cmd_args.push("--write-description".to_string());
+    }
+
+    // 弹幕 & 字幕
+    // Bilibili 弹幕以 .ass 字幕格式提供，CC 字幕含手动字幕 + AI 字幕
+    if args.download_danmaku || args.download_subtitle {
+        cmd_args.push("--write-subs".to_string());
+        cmd_args.push("--write-auto-subs".to_string());
+        cmd_args.push("--sub-langs".to_string());
+        cmd_args.push("all".to_string());
+    }
+
+    // 下载封面
+    if args.download_cover {
+        cmd_args.push("--write-thumbnail".to_string());
+    }
+
+    // Cookie：仅登录后传入，避免生成随机假 cookie 触发反爬
     let cookie_file: Option<std::path::PathBuf> = if let Some(ref sessdata) = args.cookies_sessdata {
         if !sessdata.is_empty() {
             let bili_jct = args.cookies_bili_jct.as_deref().unwrap_or("");
@@ -498,17 +539,13 @@ where
 
     if cancel_token.is_cancelled() {
         // 清理临时 cookie 文件
-        if let Some(ref cookie_path) = cookie_file {
-            let _ = std::fs::remove_file(cookie_path);
-        }
+        if let Some(ref p) = cookie_file { let _ = std::fs::remove_file(p); }
         info!("下载任务已被取消: {}", task_id);
         return Err("任务已取消".to_string());
     }
 
     // 清理临时 cookie 文件
-    if let Some(ref cookie_path) = cookie_file {
-        let _ = std::fs::remove_file(cookie_path);
-    }
+    if let Some(ref p) = cookie_file { let _ = std::fs::remove_file(p); }
 
     if status.success() {
         info!("下载完成: {} -> {}", task_id, output_path);

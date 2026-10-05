@@ -67,6 +67,7 @@ pub struct StartDownloadParams {
     pub download_danmaku: bool,
     pub download_subtitle: bool,
     pub download_cover: bool,
+    pub download_description: bool,
     pub title: Option<String>,
     pub cover_url: Option<String>,
     pub up_name: Option<String>,
@@ -109,6 +110,7 @@ pub async fn start_download(
         params.duration_text.as_deref().unwrap_or(""),
         params.quality_name.as_deref().unwrap_or(""),
     );
+    task.download_description = params.download_description;
     task.download_danmaku = params.download_danmaku;
     task.download_subtitle = params.download_subtitle;
     task.download_cover = params.download_cover;
@@ -206,6 +208,10 @@ pub async fn start_download(
             cookies_bili_jct,
             cookies_dedeuserid,
             proxy,
+            download_description: params.download_description,
+            download_danmaku: params.download_danmaku,
+            download_subtitle: params.download_subtitle,
+            download_cover: params.download_cover,
         };
 
         let app_for_progress = app.clone();
@@ -377,7 +383,7 @@ pub async fn list_tasks(state: tauri::State<'_, TaskManagerState>) -> Result<Vec
 }
 
 #[tauri::command]
-pub async fn open_output_folder(state: tauri::State<'_, TaskManagerState>, task_id: String) -> Result<(), String> {
+pub async fn open_output_folder(app: AppHandle, state: tauri::State<'_, TaskManagerState>, task_id: String) -> Result<(), String> {
     let mgr = state.manager.lock().await;
     if let Some(h) = mgr.get_task(&task_id) {
         let guard = h.lock().await;
@@ -387,8 +393,35 @@ pub async fn open_output_folder(state: tauri::State<'_, TaskManagerState>, task_
             return Err("输出路径为空".to_string());
         };
         drop(guard);
+
+        // 优先打开输出文件所在目录
         if let Some(parent) = std::path::Path::new(&path).parent() {
-            let _ = open::that(parent);
+            if parent.exists() {
+                let _ = open::that(parent);
+                return Ok(());
+            }
+        }
+
+        // 若文件目录不存在，回退到设置中的下载目录
+        let settings_download_dir = {
+            if let Ok(store) = app.store(STORE_FILENAME) {
+                if let Some(value) = store.get(SETTINGS_KEY) {
+                    let settings: AppSettings =
+                        serde_json::from_value(value.clone()).unwrap_or_default();
+                    settings.download_dir
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            }
+        };
+        if !settings_download_dir.is_empty() {
+            let p = std::path::Path::new(&settings_download_dir);
+            if p.exists() {
+                let _ = open::that(p);
+                return Ok(());
+            }
         }
     }
     Ok(())

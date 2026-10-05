@@ -69,6 +69,7 @@ export interface DownloadTask {
   maxRetries: number
   createdAt: string
   updatedAt: string
+  downloadDescription: boolean
   downloadDanmaku: boolean
   downloadSubtitle: boolean
   downloadCover: boolean
@@ -104,6 +105,7 @@ export interface StartDownloadParams {
   downloadDanmaku: boolean
   downloadSubtitle: boolean
   downloadCover: boolean
+  downloadDescription: boolean
   title?: string
   coverUrl?: string
   upName?: string

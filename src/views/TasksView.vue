@@ -154,6 +154,22 @@ function getProgressColor(task: any): string {
             </span>
           </div>
 
+          <!-- 额外下载选项标签 -->
+          <div class="task-extras" v-if="task.downloadDescription || task.downloadDanmaku || task.downloadSubtitle || task.downloadCover">
+            <span v-if="task.downloadDescription" class="extra-tag" title="下载简介">
+              <Icon icon="mdi:text-box-outline" :width="13" /> 简介
+            </span>
+            <span v-if="task.downloadDanmaku" class="extra-tag" title="下载弹幕">
+              <Icon icon="mdi:comment-text-outline" :width="13" /> 弹幕
+            </span>
+            <span v-if="task.downloadCover" class="extra-tag" title="下载封面">
+              <Icon icon="mdi:image-outline" :width="13" /> 封面
+            </span>
+            <span v-if="task.downloadSubtitle" class="extra-tag" title="下载字幕">
+              <Icon icon="mdi:subtitles-outline" :width="13" /> 字幕
+            </span>
+          </div>
+
           <!-- 进度条 -->
           <div class="task-progress">
             <el-progress
@@ -389,6 +405,26 @@ function getProgressColor(task: any): string {
 
 .meta-audio-only {
   color: var(--color-warning);
+}
+
+/* 额外下载选项标签 */
+.task-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.extra-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 /* 进度条 */

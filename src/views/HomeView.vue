@@ -15,6 +15,10 @@ const error = ref('')
 const showLoginTip = ref(false)
 const showLoginDialog = ref(false)
 const audioOnly = ref(false)
+const downloadDanmaku = ref(false)
+const downloadSubtitle = ref(false)
+const downloadCover = ref(false)
+const downloadDescription = ref(false)
 
 const router = useRouter()
 const taskStore = useTaskStore()
@@ -80,9 +84,10 @@ async function handleStartDownload() {
       url: videoStore.currentUrl,
       qualityId: quality,
       audioOnly: audioOnly.value,
-      downloadDanmaku: false,
-      downloadSubtitle: false,
-      downloadCover: false,
+      downloadDanmaku: downloadDanmaku.value,
+      downloadSubtitle: downloadSubtitle.value,
+      downloadCover: downloadCover.value,
+      downloadDescription: downloadDescription.value,
       title: video.title,
       coverUrl: video.coverUrl,
       upName: video.upName,
@@ -188,9 +193,10 @@ async function handleStartDownload() {
             重新解析
           </el-button>
           <el-checkbox v-model="audioOnly" label="仅下载音频 (MP3)" />
-          <el-checkbox v-model="videoStore.currentVideo.hasSubtitle" label="下载字幕" />
-          <el-checkbox label="下载弹幕" />
-          <el-checkbox label="下载封面" />
+          <el-checkbox v-model="downloadDescription" label="下载简介" />
+          <el-checkbox v-model="downloadDanmaku" label="下载弹幕" />
+          <el-checkbox v-model="downloadCover" label="下载封面" />
+          <el-checkbox v-model="downloadSubtitle" label="下载字幕" />
         </div>
 
         <p class="disclaimer">
