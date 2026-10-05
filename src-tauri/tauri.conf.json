@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "BiliDownloader",
   "version": "0.1.0",
-  "identifier": "com.itharron.bili_downloader",
+  "identifier": "com.itharron.bili-downloader",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -24,11 +24,11 @@
     ],
     "trayIcon": {
       "iconPath": "icons/32x32.png",
-      "iconAsTemplate": true,
+      "iconAsTemplate": false,
       "tooltip": "BiliDownloader - B 站视频下载器"
     },
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' https://api.bilibili.com https://*.bilibili.com https://*.hdslb.com; img-src 'self' https://*.bilibili.com https://*.hdslb.com data:; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; connect-src 'self' https://api.bilibili.com https://*.bilibili.com https://*.hdslb.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; img-src 'self' https: http: data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
     }
   },
   "bundle": {
@@ -42,7 +42,9 @@
       "icons/icon.ico"
     ],
     "externalBin": [],
-    "resources": {},
+    "resources": {
+      "binaries/yt-dlp.exe": "yt-dlp.exe"
+    },
     "createUpdaterArtifacts": true
   },
   "plugins": {

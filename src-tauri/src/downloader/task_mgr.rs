@@ -183,6 +183,42 @@ fn find_ffmpeg() -> Option<String> {
     }
     None
 }
+fn find_ytdlp() -> String {
+    let exe_name = if cfg!(target_os = "windows") {
+        "yt-dlp.exe"
+    } else {
+        "yt-dlp"
+    };
+
+    // 1. 先检查可执行文件同目录（打包后的 sidecar 位置）
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let bundled = exe_dir.join(exe_name);
+            if bundled.exists() {
+                return bundled.to_string_lossy().to_string();
+            }
+            // 也检查 binaries 子目录
+            let binaries_dir = exe_dir.join("binaries").join(exe_name);
+            if binaries_dir.exists() {
+                return binaries_dir.to_string_lossy().to_string();
+            }
+        }
+    }
+
+    // 2. 检查 PATH 环境变量
+    if let Ok(path_var) = std::env::var("PATH") {
+        for dir in std::env::split_paths(&path_var) {
+            let full = dir.join(exe_name);
+            if full.exists() {
+                return full.to_string_lossy().to_string();
+            }
+        }
+    }
+
+    // 3. 兜底返回命令名（由系统解析）
+    exe_name.to_string()
+}
+
 fn quality_to_ytdlp_format(quality_id: u32) -> &'static str {
     match quality_id {
         127 => "bestvideo[height<=4320]+bestaudio/best[height<=4320]",
@@ -318,12 +354,23 @@ where
 
     info!("yt-dlp 参数: {:?}", cmd_args);
 
-    // 启动 yt-dlp 进程
-    let mut child = TokioCommand::new("yt-dlp")
-        .args(&cmd_args)
+    // 查找 yt-dlp 可执行文件路径
+    let ytdlp_path = find_ytdlp();
+
+    // 启动 yt-dlp 进程（隐藏控制台窗口）
+    let mut cmd = TokioCommand::new(&ytdlp_path);
+    cmd.args(&cmd_args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .kill_on_drop(true)
+        .kill_on_drop(true);
+
+    #[cfg(target_os = "windows")]
+    {
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let mut child = cmd
         .spawn()
         .map_err(|e| format!("无法启动 yt-dlp: {}. 请确认已安装 yt-dlp。", e))?;
 

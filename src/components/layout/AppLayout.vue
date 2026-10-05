@@ -16,8 +16,9 @@ const router = useRouter()
 
 const activeTaskCount = computed(() => taskStore.activeTasks.length)
 
-onMounted(() => {
-  settingsStore.loadSettings()
+onMounted(async () => {
+  await settingsStore.loadSettings()
+  settingsStore.applyTheme(settingsStore.settings.theme)
   taskStore.initEventListeners()
   authStore.checkLoginStatus()
 })
